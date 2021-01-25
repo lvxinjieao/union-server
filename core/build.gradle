@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+}
+
+group 'union'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include:'*.jar')
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}

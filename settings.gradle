@@ -1,0 +1,5 @@
+rootProject.name = 'union'
+include 'core'
+include 'server'
+include 'manager'
+

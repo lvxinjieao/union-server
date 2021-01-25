@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.3.xsd"
+       default-autowire="byName" default-lazy-init="false">
+
+    <!-- 定义受环境影响易变的变量 -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <!-- 标准配置 -->
+                <value>classpath:jdbc.properties</value>
+            </list>
+        </property>
+    </bean>
+
+
+    <!-- 使用annotation 自动注册bean,并保证@Required,@Autowired的属性被注入 -->
+    <context:component-scan base-package="com.u8.server"/>
+    <context:annotation-config/>
+
+    <!-- 数据源配置,使用应用内的DBCP数据库连接池 -->
+    <!--<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">-->
+    <!--&lt;!&ndash; Connection Info &ndash;&gt;-->
+    <!--<property name="driverClassName" value="${jdbc.driver}" />-->
+    <!--<property name="url" value="${jdbc.url}" />-->
+    <!--<property name="username" value="${jdbc.username}" />-->
+    <!--<property name="password" value="${jdbc.password}" />-->
+
+    <!--&lt;!&ndash; Connection Pooling Info &ndash;&gt;-->
+    <!--<property name="initialSize" value="5" />-->
+    <!--<property name="maxActive" value="500" />-->
+    <!--<property name="maxIdle" value="10000" />-->
+    <!--<property name="maxWait" value="10000" />-->
+    <!--<property name="defaultAutoCommit" value="true" />-->
+    <!--<property name="removeAbandoned" value="false"/>-->
+    <!--<property name="removeAbandonedTimeout" value="180" />-->
+    <!--<property name="logAbandoned" value="true"/>-->
+    <!--<property name="validationQuery" value="SELECT 1" />-->
+    <!--<property name="testOnBorrow" value="true"/>-->
+    <!--</bean>-->
+
+    <!--<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">-->
+    <!--<property name="driverClass" value="${jdbc.driver}" />-->
+    <!--<property name="jdbcUrl" value="${jdbc.url}" />-->
+    <!--<property name="user" value="${jdbc.username}" />-->
+    <!--<property name="password" value="${jdbc.password}" />-->
+
+    <!--<property name="initialPoolSize" value="${c3p0.init_pool_size}" />-->
+    <!--&lt;!&ndash;连接空闲时间(秒) &ndash;&gt;-->
+    <!--<property name="maxIdleTime" value="${c3p0.max_idle_time}" />-->
+    <!--<property name="maxPoolSize" value="${c3p0.max_pool_size}" />-->
+    <!--<property name="minPoolSize" value="${c3p0.min_pool_size}" />-->
+    <!--&lt;!&ndash;获取新连接的等待时间(毫秒)0一直等待 &ndash;&gt;-->
+    <!--<property name="checkoutTimeout" value="${c3p0.checkout_timeout}" />-->
+    <!--&lt;!&ndash;检测空闲连接的时间间隔(秒) &ndash;&gt;-->
+    <!--<property name="idleConnectionTestPeriod" value="${c3p0.idle_conn_test_period}" />-->
+    <!--&lt;!&ndash;<property name="testConnectionOnCheckout" value="true" />&ndash;&gt;-->
+    <!--</bean>-->
+
+    <!--使用阿里druid连接池-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <!-- 基本属性 url、user、password127.0.0.1 -->
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+
+        <!-- 配置初始化大小、最小、最大 -->
+        <property name="initialSize" value="10"/>
+        <property name="minIdle" value="5"/>
+        <property name="maxActive" value="60"/>
+
+        <!-- 配置获取连接等待超时的时间 -->
+        <property name="maxWait" value="60000"/>
+
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+        <!-- 验证连接有效与否的SQL，不同的数据配置不同 -->
+
+        <property name="validationQuery" value="SELECT 1 "/>
+        <property name="testWhileIdle" value="true"/>
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+
+        <!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+        <property name="poolPreparedStatements" value="true"/>
+        <property name="maxPoolPreparedStatementPerConnectionSize" value="20"/>
+
+        <!-- 配置监控统计拦截的filters -->
+        <!--<property name="filters" value="stat" />-->
+    </bean>
+
+    <!-- Hibernate配置 -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">${hibernate.dialect}</prop>
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+                <prop key="hibernate.connection.release_mode">auto</prop>
+                <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+                <!--<prop key="hibernate.current_session_context_class">${hibernate.current_session_context_class}</prop>-->
+            </props>
+        </property>
+        <property name="packagesToScan" value="com.u8.server.data"/>
+    </bean>
+
+
+    <!--配置Redis-->
+    <bean id="redisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="${redis.maxIdle}"/>
+        <property name="maxTotal" value="${redis.maxActive}"/>
+        <property name="maxWaitMillis" value="${redis.maxWaitMillis}"/>
+        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+        <property name="testOnReturn" value="${redis.testOnReturn}"/>
+        <property name="timeBetweenEvictionRunsMillis" value="${redis.timeBetweenEvictionRunsMillis}"/>
+        <property name="minEvictableIdleTimeMillis" value="${redis.minEvictableIdleTimeMillis}"/>
+        <property name="numTestsPerEvictionRun" value="${redis.numTestsPerEvictionRun}"/>
+    </bean>
+
+    <!-- 默认redis配置， 如果采用集群方式， 可以把这里注释掉，把下面集群配置那里打开-->
+    <bean id="jedisConnectionFactory"
+          class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+          p:hostName="${redis.hostName}" p:port="${redis.port}" p:password="${redis.password}"
+          p:usePool="true" p:poolConfig-ref="redisPoolConfig" p:database="${redis.database}"/>
+
+
+    <!-- 集群redis配置，如果采用集群方式， 请把上面这个配置注释掉，把下面的配置打开。 默认是3主3从集群配置， 如果有更多的节点， 需要在clusterNodes里面增加节点。 集群模式下， redis不要设置集群密码-->
+    <!--<bean id="redisClusterConfiguration"-->
+    <!--class="org.springframework.data.redis.connection.RedisClusterConfiguration">-->
+    <!--<property name="maxRedirects" value="3"></property>-->
+    <!--<property name="clusterNodes">-->
+    <!--<set>-->
+    <!--<bean class="org.springframework.data.redis.connection.RedisClusterNode">-->
+    <!--<constructor-arg name="host" value="${redis.cluster.ip1}"></constructor-arg>-->
+    <!--<constructor-arg name="port" value="${redis.cluster.port1}"></constructor-arg>-->
+    <!--</bean>-->
+    <!--<bean class="org.springframework.data.redis.connection.RedisClusterNode">-->
+    <!--<constructor-arg name="host" value="${redis.cluster.ip2}"></constructor-arg>-->
+    <!--<constructor-arg name="port" value="${redis.cluster.port2}"></constructor-arg>-->
+    <!--</bean>-->
+    <!--<bean class="org.springframework.data.redis.connection.RedisClusterNode">-->
+    <!--<constructor-arg name="host" value="${redis.cluster.ip3}"></constructor-arg>-->
+    <!--<constructor-arg name="port" value="${redis.cluster.port3}"></constructor-arg>-->
+    <!--</bean>-->
+    <!--<bean class="org.springframework.data.redis.connection.RedisClusterNode">-->
+    <!--<constructor-arg name="host" value="${redis.cluster.ip4}"></constructor-arg>-->
+    <!--<constructor-arg name="port" value="${redis.cluster.port4}"></constructor-arg>-->
+    <!--</bean>-->
+    <!--<bean class="org.springframework.data.redis.connection.RedisClusterNode">-->
+    <!--<constructor-arg name="host" value="${redis.cluster.ip5}"></constructor-arg>-->
+    <!--<constructor-arg name="port" value="${redis.cluster.port5}"></constructor-arg>-->
+    <!--</bean>-->
+    <!--<bean class="org.springframework.data.redis.connection.RedisClusterNode">-->
+    <!--<constructor-arg name="host" value="${redis.cluster.ip6}"></constructor-arg>-->
+    <!--<constructor-arg name="port" value="${redis.cluster.port6}"></constructor-arg>-->
+    <!--</bean>-->
+    <!--</set>-->
+    <!--</property>-->
+    <!--</bean>-->
+
+    <!--<bean id="jedisConnectionFactory"-->
+    <!--class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">-->
+    <!--<constructor-arg ref="redisClusterConfiguration" />-->
+    <!--<constructor-arg ref="redisPoolConfig" />-->
+    <!--</bean>-->
+
+    <bean id="stringSerializer" class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate"
+          p:connectionFactory-ref="jedisConnectionFactory"
+          p:keySerializer-ref="stringSerializer"
+          p:hashKeySerializer-ref="stringSerializer"/>
+
+
+    <!-- 事务管理器配置,单数据源事务 -->
+    <bean id="txManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <tx:advice id="txAdvice" transaction-manager="txManager">
+        <tx:attributes>
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="query*" read-only="true"/>
+            <tx:method name="is*" read-only="true"/>
+            <tx:method name="*" propagation="REQUIRED"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!-- 使用annotation定义事务 -->
+    <tx:annotation-driven transaction-manager="txManager" proxy-target-class="true"/>
+
+    <aop:config proxy-target-class="true">
+        <aop:advisor pointcut="execution(* com.u8.server.service..*Manager.*(..))" advice-ref="txAdvice"/>
+        <aop:advisor pointcut="execution(* com.u8.server.dao.hibernate..*Dao.*(..))" advice-ref="txAdvice"/>
+    </aop:config>
+
+
+</beans>
